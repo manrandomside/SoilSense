@@ -14,15 +14,31 @@ interface SensorData {
     lastUpdate: string;
 }
 
-interface HomeProps {
+// DIPERBAIKI: Interface disesuaikan dengan data dari Controller
+interface DashboardProps {
     user: {
         name: string;
+        email?: string;
         avatar?: string;
     };
     sensorData: SensorData;
+    statistics?: {
+        totalSensors: number;
+        alertsCount: number;
+        lastSyncTime: string;
+        batteryLevel: number;
+    };
+    weatherData?: {
+        temperature: number;
+        humidity: number;
+        condition: string;
+        rainfall: number;
+        windSpeed: number;
+    };
 }
 
-const SoilSenseHome: React.FC<HomeProps> = ({ user, sensorData }) => {
+// DIPERBAIKI: Menggunakan nama Dashboard (bukan SoilSenseHome) dan default export
+const Dashboard: React.FC<DashboardProps> = ({ user, sensorData, statistics, weatherData }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [selectedPlantType, setSelectedPlantType] = useState<string | null>(null);
 
@@ -117,8 +133,13 @@ const SoilSenseHome: React.FC<HomeProps> = ({ user, sensorData }) => {
 
                             {/* User Actions */}
                             <div className="flex items-center space-x-4">
-                                <button className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600">
+                                <button className="relative rounded-lg p-2 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600">
                                     <Bell className="h-5 w-5" />
+                                    {statistics && statistics.alertsCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                            {statistics.alertsCount}
+                                        </span>
+                                    )}
                                 </button>
                                 <button className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-green-50 hover:text-green-600">
                                     <Settings className="h-5 w-5" />
@@ -127,7 +148,10 @@ const SoilSenseHome: React.FC<HomeProps> = ({ user, sensorData }) => {
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
                                         <User className="h-5 w-5 text-white" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                                        {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -139,8 +163,33 @@ const SoilSenseHome: React.FC<HomeProps> = ({ user, sensorData }) => {
                     {/* Welcome Section */}
                     <div className="mb-8">
                         <h2 className="mb-2 text-3xl font-bold text-gray-900">Selamat Datang, {user.name}! 👋</h2>
-                        <p className="text-gray-600">Pantau kondisi tanah Anda secara real-time • {currentTime.toLocaleTimeString('id-ID')}</p>
+                        <p className="text-gray-600">
+                            Pantau kondisi tanah Anda secara real-time • {currentTime.toLocaleTimeString('id-ID')}
+                            {statistics && (
+                                <span className="ml-2">
+                                    • {statistics.totalSensors} sensor aktif • Battery {statistics.batteryLevel}%
+                                </span>
+                            )}
+                        </p>
                     </div>
+
+                    {/* Weather Info (jika ada) */}
+                    {weatherData && (
+                        <div className="mb-8 rounded-2xl border border-blue-100 bg-gradient-to-r from-sky-50 to-blue-50 p-6 shadow-lg">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-blue-900">Cuaca Hari Ini</h3>
+                                    <p className="text-blue-700">
+                                        {weatherData.condition} • {weatherData.temperature}°C
+                                    </p>
+                                </div>
+                                <div className="text-right text-sm text-blue-600">
+                                    <p>Kelembapan: {weatherData.humidity}%</p>
+                                    <p>Angin: {weatherData.windSpeed} km/h</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Main Sensor Display */}
                     <div className="mb-8 rounded-2xl border border-green-100 bg-white p-8 shadow-lg">
@@ -308,4 +357,13 @@ const SoilSenseHome: React.FC<HomeProps> = ({ user, sensorData }) => {
     );
 };
 
-export default SoilSenseHome;
+// DIPERBAIKI: Type-safe way untuk disable layout
+interface ComponentWithLayout extends React.FC<DashboardProps> {
+    layout?: (page: React.ReactNode) => React.ReactNode;
+}
+
+const DashboardWithLayout: ComponentWithLayout = Dashboard;
+DashboardWithLayout.layout = (page: React.ReactNode) => page;
+
+// DIPERBAIKI: Default export yang benar untuk Inertia
+export default DashboardWithLayout;
