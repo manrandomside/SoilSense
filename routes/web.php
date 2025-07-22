@@ -40,11 +40,45 @@ Route::get('/test-dashboard', function () {
         'windSpeed' => 5,
     ];
 
+    // Add seasonal data for testing
+    $seasonalSettings = [
+        'season_mode' => 'auto',
+        'current_season' => 'dry',
+        'dry_season_settings' => [
+            'moisture_min' => 30,
+            'moisture_max' => 60,
+            'ph_min' => 6.0,
+            'ph_max' => 7.5,
+        ],
+        'wet_season_settings' => [
+            'moisture_min' => 50,
+            'moisture_max' => 80,
+            'ph_min' => 5.8,
+            'ph_max' => 7.2,
+        ],
+        'power_conservation_enabled' => false,
+    ];
+
+    $seasonalAnalytics = [
+        'dry_season' => [
+            'avg_moisture' => 45.2,
+            'solar_efficiency' => 85,
+            'irrigation_frequency' => 2.3,
+        ],
+        'wet_season' => [
+            'avg_moisture' => 68.7,
+            'solar_efficiency' => 65,
+            'irrigation_frequency' => 0.8,
+        ],
+    ];
+
     return Inertia::render('dashboard', [
         'user' => $user,
         'sensorData' => $sensorData,
         'statistics' => $statistics,
         'weatherData' => $weatherData,
+        'seasonalSettings' => $seasonalSettings,
+        'seasonalAnalytics' => $seasonalAnalytics,
     ]);
 })->name('test.dashboard');
 
@@ -79,6 +113,58 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings', function () {
         return Inertia::render('settings');
     })->name('settings');
+
+    // =====================================================
+    // SEASONAL MANAGEMENT ROUTES - NEW FEATURES
+    // =====================================================
+    
+    // Update seasonal settings (mode: auto/manual, thresholds per season)
+    Route::post('/dashboard/seasonal-settings', [DashboardController::class, 'updateSeasonalSettings'])
+        ->name('dashboard.seasonal.update');
+    
+    // Get seasonal analytics comparison data
+    Route::get('/dashboard/seasonal-analytics', [DashboardController::class, 'getSeasonalAnalytics'])
+        ->name('dashboard.seasonal.analytics');
+    
+    // Get seasonal trends for charts (dry vs wet season performance)
+    Route::get('/dashboard/seasonal-trends/{season?}', [DashboardController::class, 'getSeasonalTrends'])
+        ->name('dashboard.seasonal.trends');
+    
+    // Export seasonal report (PDF/Excel)
+    Route::get('/dashboard/seasonal-report/{period?}', [DashboardController::class, 'exportSeasonalReport'])
+        ->name('dashboard.seasonal.report');
+    
+    // =====================================================
+    // ENHANCED API ENDPOINTS - EXISTING + SEASONAL CONTEXT
+    // =====================================================
+    
+    // Enhanced sensor data API with seasonal alerts
+    Route::get('/api/sensor-data', [DashboardController::class, 'getSensorData'])
+        ->name('api.sensor.data');
+    
+    // Enhanced historical data with seasonal grouping
+    Route::get('/api/historical-data', [DashboardController::class, 'getHistoricalData'])
+        ->name('api.historical.data');
+    
+    // Update sensor settings (enhanced with seasonal validation)
+    Route::post('/api/sensor-settings', [DashboardController::class, 'updateSensorSettings'])
+        ->name('api.sensor.settings');
+    
+    // =====================================================
+    // IOT INTEGRATION ENDPOINTS - FOR DEVICE SYNC
+    // =====================================================
+    
+    // Endpoint for IoT device to get current seasonal settings
+    Route::get('/api/iot/seasonal-config', [DashboardController::class, 'getIoTSeasonalConfig'])
+        ->name('api.iot.seasonal.config');
+    
+    // Endpoint for IoT device to report sensor data with seasonal context
+    Route::post('/api/iot/sensor-report', [DashboardController::class, 'receiveIoTSensorData'])
+        ->name('api.iot.sensor.report');
+    
+    // Endpoint for IoT device to request seasonal recommendations
+    Route::get('/api/iot/seasonal-recommendations', [DashboardController::class, 'getIoTRecommendations'])
+        ->name('api.iot.seasonal.recommendations');
 });
 
 require __DIR__.'/settings.php';
