@@ -8,19 +8,17 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('seasonal_settings', function (Blueprint $table) {
+        Schema::create('seasonal_presets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('season_mode', ['auto', 'manual_dry', 'manual_wet'])->default('auto');
-            $table->enum('current_season', ['dry', 'wet'])->default('dry');
+            $table->string('name'); // e.g., "Default Dry Season", "Tomato Wet Season"
+            $table->enum('season_type', ['dry', 'wet']);
+            $table->text('description')->nullable();
             
-            // Threshold settings per season
-            $table->json('dry_season_settings'); // {moisture_min, moisture_max, ph_min, ph_max, monitoring_interval}
-            $table->json('wet_season_settings'); // Same structure
+            // Preset threshold values
+            $table->json('threshold_settings'); // {moisture_min, moisture_max, ph_min, ph_max, etc}
             
-            $table->boolean('power_conservation_enabled')->default(false);
-            $table->integer('monitoring_interval_dry')->default(30); // minutes
-            $table->integer('monitoring_interval_wet')->default(60); // minutes
+            $table->boolean('is_default')->default(false);
+            $table->boolean('is_active')->default(true);
             
             $table->timestamps();
         });
@@ -28,6 +26,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('seasonal_settings');
+        Schema::dropIfExists('seasonal_presets');
     }
 };
