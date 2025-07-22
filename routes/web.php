@@ -82,13 +82,45 @@ Route::get('/test-dashboard', function () {
     ]);
 })->name('test.dashboard');
 
-// Route default - cek apakah user sudah login
+// =====================================================
+// DEVELOPMENT ROUTES (NO AUTH REQUIRED)
+// =====================================================
+// CATATAN: Route ini hanya untuk development. Hapus atau comment saat production!
+
+if (app()->environment('local', 'testing')) {
+    // Route development dashboard - bisa diakses tanpa login
+    Route::get('/dev-dashboard', [DashboardController::class, 'index'])->name('dev.dashboard');
+    
+    // Route development untuk planting guide - tanpa auth
+    Route::get('/dev-planting/{type}', function ($type) {
+        return Inertia::render('PlantingGuide', [
+            'type' => $type
+        ]);
+    })->name('dev.planting.guide');
+    
+    // Route development untuk settings - tanpa auth
+    Route::get('/dev-settings', function () {
+        return Inertia::render('settings');
+    })->name('dev.settings');
+}
+
+// =====================================================
+// PUBLIC ROUTES (NO AUTH REQUIRED)
+// =====================================================
+
+// Route default - cek environment dan auth status
 Route::get('/', function () {
-    // Jika user sudah login, redirect ke dashboard
+    // Jika dalam mode development, langsung tampilkan dashboard
+    if (app()->environment('local', 'testing')) {
+        return redirect()->route('dev.dashboard');
+    }
+    
+    // Jika production dan user sudah login, redirect ke dashboard
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
-    // Jika belum login, tampilkan welcome page
+    
+    // Jika production dan belum login, tampilkan welcome page
     return Inertia::render('welcome');
 })->name('home');
 
@@ -97,7 +129,10 @@ Route::get('/about', function () {
     return Inertia::render('about');
 })->name('about');
 
-// Protected routes (memerlukan authentication)
+// =====================================================
+// PROTECTED ROUTES (MEMERLUKAN AUTHENTICATION)
+// =====================================================
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard SoilSense dengan controller - DIPERBAIKI: menggunakan 'dashboard' (lowercase)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
