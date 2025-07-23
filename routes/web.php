@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SoilBotController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -84,8 +85,69 @@ Route::get('/test-dashboard', function () {
         'weatherData' => $weatherData,
         'seasonalSettings' => $seasonalSettings,
         'seasonalAnalytics' => $seasonalAnalytics,
+        'soilbot_available' => true // Enable SoilBot in test dashboard
     ]);
 })->name('test.dashboard');
+
+// =====================================================
+// SOILBOT ROUTES (PUBLIC - NO MIDDLEWARE)
+// =====================================================
+
+// Halaman SoilBot (dapat diakses tanpa login)
+Route::get('/soilbot', function () {
+    // Demo sensor data jika tidak ada user login
+    $demoSensorData = [
+        'moisture' => 63,
+        'ph' => 6.8,
+        'npk' => [
+            'nitrogen' => 45,
+            'phosphorus' => 32,
+            'potassium' => 78
+        ],
+        'temperature' => 28.5,
+        'lastUpdate' => now()->toISOString()
+    ];
+
+    return Inertia::render('SoilBot', [
+        'sensorData' => $demoSensorData,
+        'standalone' => true // Indicate this is standalone page
+    ]);
+})->name('soilbot');
+
+// SoilBot Widget - untuk embed di dashboard
+Route::get('/soilbot/widget', function () {
+    return Inertia::render('SoilBotWidget');
+})->name('soilbot.widget');
+
+// API Routes untuk SoilBot (Public Access)
+Route::prefix('api/soilbot')->name('api.soilbot.')->group(function () {
+    
+    // Get predefined questions
+    Route::get('/questions', [SoilBotController::class, 'getPredefinedQuestions'])
+          ->name('questions');
+    
+    // Process chat message
+    Route::post('/chat', [SoilBotController::class, 'processMessage'])
+          ->name('chat');
+    
+    // Get specific answer by question ID
+    Route::post('/answer', [SoilBotController::class, 'getAnswer'])
+          ->name('answer');
+    
+    // Get recommendations based on sensor data
+    Route::post('/recommendations', [SoilBotController::class, 'getRecommendations'])
+          ->name('recommendations');
+    
+    // Health check for chatbot service
+    Route::get('/health', function () {
+        return response()->json([
+            'status' => 'healthy',
+            'service' => 'SoilBot',
+            'version' => '1.0.0',
+            'timestamp' => now()->toISOString()
+        ]);
+    })->name('health');
+});
 
 // =====================================================
 // DEVELOPMENT ROUTES (NO AUTH REQUIRED)
@@ -129,6 +191,27 @@ if (app()->environment('local', 'testing')) {
     Route::get('/dev-email-login', function () {
         return Inertia::render('EmailLogin');
     })->name('dev.email.login');
+
+    // BARU: Route development untuk SoilBot - tanpa auth
+    Route::get('/dev-soilbot', function () {
+        $demoSensorData = [
+            'moisture' => 45,
+            'ph' => 6.2,
+            'npk' => [
+                'nitrogen' => 35,
+                'phosphorus' => 28,
+                'potassium' => 65
+            ],
+            'temperature' => 29.5,
+            'lastUpdate' => now()->toISOString()
+        ];
+
+        return Inertia::render('SoilBot', [
+            'sensorData' => $demoSensorData,
+            'standalone' => true,
+            'demo_mode' => true
+        ]);
+    })->name('dev.soilbot');
     
     // Test barcode generation
     Route::get('/dev-generate-barcodes', function () {
@@ -151,6 +234,55 @@ if (app()->environment('local', 'testing')) {
         ]);
     });
 }
+
+// =====================================================
+// INTEGRATION WITH EXISTING DASHBOARD
+// =====================================================
+
+// Alternative dashboard access (public demo dengan SoilBot)
+Route::get('/dashboard/demo', function () {
+    $sensorData = [
+        'moisture' => 63,
+        'ph' => 6.8,
+        'npk' => [
+            'nitrogen' => 45,
+            'phosphorus' => 32,
+            'potassium' => 78
+        ],
+        'temperature' => 28.5,
+        'lastUpdate' => now()->toISOString()
+    ];
+
+    $user = [
+        'name' => 'Demo User',
+        'email' => 'demo@soilsense.com',
+        'avatar' => null,
+    ];
+
+    $statistics = [
+        'totalSensors' => 3,
+        'alertsCount' => 0,
+        'lastSyncTime' => now()->subMinutes(2)->toISOString(),
+        'batteryLevel' => 85,
+    ];
+
+    $weatherData = [
+        'temperature' => 32,
+        'humidity' => 78,
+        'condition' => 'Cerah Berawan',
+        'rainfall' => 0,
+        'windSpeed' => 5,
+    ];
+
+    return Inertia::render('dashboard', [
+        'user' => $user,
+        'sensorData' => $sensorData,
+        'statistics' => $statistics,
+        'weatherData' => $weatherData,
+        'demo_mode' => true,
+        'soilbot_available' => true // Enable SoilBot in demo dashboard
+    ]);
+})->name('dashboard.demo');
 
 // =====================================================
 // PUBLIC ROUTES (NO AUTH REQUIRED)
@@ -254,7 +386,7 @@ Route::post('/profile-setup', function (Request $request) {
 // PROTECTED ROUTES - MANUAL AUTH CHECK (NO MIDDLEWARE)
 // =====================================================
 
-// Dashboard SoilSense dengan manual auth check
+// Dashboard SoilSense dengan manual auth check (FIXED)
 Route::get('/dashboard', function () {
     // Manual auth check
     if (!Auth::check()) {
@@ -266,7 +398,50 @@ Route::get('/dashboard', function () {
         return redirect()->route('profile.setup')->with('message', 'Silakan lengkapi profil Anda terlebih dahulu.');
     }
     
-    return app(DashboardController::class)->index();
+    // Get user data
+    $user = Auth::user();
+    
+    // Generate demo sensor data (replace with real sensor data later)
+    $sensorData = [
+        'moisture' => 63,
+        'ph' => 6.8,
+        'npk' => [
+            'nitrogen' => 45,
+            'phosphorus' => 32,
+            'potassium' => 78
+        ],
+        'temperature' => 28.5,
+        'lastUpdate' => now()->toISOString()
+    ];
+
+    $statistics = [
+        'totalSensors' => 3,
+        'alertsCount' => 0,
+        'lastSyncTime' => now()->subMinutes(2)->toISOString(),
+        'batteryLevel' => 85,
+    ];
+
+    $weatherData = [
+        'temperature' => 32,
+        'humidity' => 78,
+        'condition' => 'Cerah Berawan',
+        'rainfall' => 0,
+        'windSpeed' => 5,
+    ];
+
+    // Return Inertia response with SoilBot enabled
+    return Inertia::render('dashboard', [
+        'user' => [
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar ?? null,
+        ],
+        'sensorData' => $sensorData,
+        'statistics' => $statistics,
+        'weatherData' => $weatherData,
+        'soilbot_available' => true, // Enable SoilBot
+        'demo_mode' => false
+    ]);
 })->name('dashboard');
 
 // Route untuk planting guide dengan manual auth check

@@ -4,6 +4,7 @@ import {
     BarChart3,
     Battery,
     Bell,
+    Bot,
     CheckCircle,
     ChevronDown,
     ChevronRight,
@@ -22,6 +23,7 @@ import {
     WifiOff,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import SoilBot from '../components/SoilBot'; // Import SoilBot component
 
 // IoT Toggle Component
 interface IoTToggleProps {
@@ -176,6 +178,8 @@ interface DashboardProps {
     };
     seasonalSettings?: SeasonalSettings;
     seasonalAnalytics?: SeasonalAnalytics;
+    soilbot_available?: boolean; // New prop for SoilBot availability
+    demo_mode?: boolean; // New prop for demo mode
 }
 
 interface PlantType {
@@ -240,10 +244,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     },
     seasonalSettings,
     seasonalAnalytics,
+    soilbot_available = true, // Default to true
+    demo_mode = false,
 }) => {
     const [selectedPlant, setSelectedPlant] = useState<string>('sawah');
     const [isLoading, setIsLoading] = useState(false);
     const [iotSystemActive, setIotSystemActive] = useState(false);
+    const [showSoilBot, setShowSoilBot] = useState(false); // New state for SoilBot
 
     // Animation states
     const [cardHovered, setCardHovered] = useState<string | null>(null);
@@ -413,6 +420,29 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Enhanced Main Content */}
                 <main className="z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                    {/* Demo Mode Indicator */}
+                    {demo_mode && (
+                        <div className="mb-6 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white shadow-lg">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                                        <span className="text-sm">🚀</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold">Mode Demo Aktif</h3>
+                                        <p className="text-sm opacity-90">Anda sedang melihat demo SoilSense dengan data simulasi</p>
+                                    </div>
+                                </div>
+                                <Link
+                                    href="/login"
+                                    className="rounded-lg bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/30"
+                                >
+                                    Login Sekarang
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Enhanced Welcome Section - MODIFIED: Removed Weather Info and Seasonal Indicator */}
                     <div className="mb-8 rounded-3xl bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 p-8 text-white shadow-2xl ring-1 ring-green-200/20">
                         <div className="flex items-center justify-between">
@@ -438,6 +468,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <Battery className="h-4 w-4" />
                                         Battery {statistics.batteryLevel}%
                                     </span>
+                                    {soilbot_available && (
+                                        <span className="flex items-center gap-2">
+                                            <Bot className="h-4 w-4" />
+                                            SoilBot Ready
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -447,6 +483,32 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* SoilBot Quick Access Card (NEW) */}
+                    {soilbot_available && (
+                        <div className="mb-8 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-white shadow-xl">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                                        <Bot className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="mb-1 text-xl font-bold">🤖 SoilBot Siap Membantu!</h3>
+                                        <p className="text-sm text-purple-100">
+                                            Dapatkan rekomendasi pertanian pintar berdasarkan data sensor real-time Anda
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowSoilBot(true)}
+                                    className="flex items-center space-x-2 rounded-xl bg-white/20 px-6 py-3 font-medium backdrop-blur-sm transition-colors hover:bg-white/30"
+                                >
+                                    <Bot className="h-5 w-5" />
+                                    <span>Chat Sekarang</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Enhanced Main Moisture Display */}
                     <div className="mb-8 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200/50">
@@ -875,7 +937,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
 
-                    {/* Quick Actions - MODIFIED: Removed Settings and Alert buttons */}
+                    {/* Quick Actions - UPDATED with SoilBot Integration */}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg transition-transform group-hover:scale-110">
@@ -887,18 +949,36 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </button>
 
-                        <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg transition-transform group-hover:scale-110">
-                                <Lightbulb className="h-6 w-6 text-white" />
+                        {/* Updated Tips & Saran Button with SoilBot Integration */}
+                        <button
+                            onClick={() => setShowSoilBot(true)}
+                            className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-purple-300"
+                        >
+                            {/* Animated background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
+
+                            <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg transition-transform group-hover:scale-110">
+                                <Bot className="h-6 w-6 text-white" />
                             </div>
-                            <div>
+                            <div className="relative z-10">
                                 <div className="font-bold text-slate-800">Tips & Saran</div>
-                                <div className="text-xs text-slate-500">AI Recommendation</div>
+                                <div className="text-xs text-slate-500">Chat dengan SoilBot</div>
+                            </div>
+                            <div className="relative z-10 ml-auto">
+                                <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                            </div>
+
+                            {/* Hover effect */}
+                            <div className="absolute top-1/2 right-2 -translate-y-1/2 transform opacity-0 transition-opacity group-hover:opacity-100">
+                                <ChevronRight className="h-4 w-4 text-purple-500" />
                             </div>
                         </button>
                     </div>
                 </main>
             </div>
+
+            {/* SoilBot Modal */}
+            {showSoilBot && soilbot_available && <SoilBot sensorData={sensorData} onClose={() => setShowSoilBot(false)} />}
         </>
     );
 };
