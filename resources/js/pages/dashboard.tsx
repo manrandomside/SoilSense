@@ -18,8 +18,92 @@ import {
     TrendingUp,
     User,
     Wheat,
+    Wifi,
+    WifiOff,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+
+// IoT Toggle Component
+interface IoTToggleProps {
+    initialState?: boolean;
+    onToggle?: (isActive: boolean) => void;
+    disabled?: boolean;
+}
+
+function IoTToggle({ initialState = false, onToggle, disabled = false }: IoTToggleProps) {
+    const [isActive, setIsActive] = useState(initialState);
+    const [isConnecting, setIsConnecting] = useState(false);
+
+    const handleToggle = async () => {
+        if (disabled || isConnecting) return;
+
+        setIsConnecting(true);
+
+        // Simulasi loading untuk koneksi IoT
+        setTimeout(() => {
+            const newState = !isActive;
+            setIsActive(newState);
+            setIsConnecting(false);
+
+            // Callback untuk parent component
+            if (onToggle) {
+                onToggle(newState);
+            }
+        }, 1500);
+    };
+
+    return (
+        <div className="flex items-center space-x-3">
+            {/* Status Text */}
+            <div className="hidden flex-col items-end lg:flex">
+                <span className="text-xs font-medium text-gray-700">Sistem IoT</span>
+                <span className={`text-xs ${isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                    {isConnecting ? 'Menghubungkan...' : isActive ? 'Aktif' : 'Nonaktif'}
+                </span>
+            </div>
+
+            {/* Toggle Switch */}
+            <div className="relative">
+                <button
+                    onClick={handleToggle}
+                    disabled={disabled || isConnecting}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                        isActive ? 'bg-green-500 shadow-lg shadow-green-500/25' : 'bg-gray-300'
+                    }`}
+                    aria-label={`${isActive ? 'Matikan' : 'Hidupkan'} sistem IoT SoilSense`}
+                    title={`${isActive ? 'Matikan' : 'Hidupkan'} sistem IoT SoilSense`}
+                >
+                    <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                            isActive ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                    >
+                        {/* Icon inside the toggle */}
+                        <div className="flex h-full w-full items-center justify-center">
+                            {isConnecting ? (
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
+                            ) : isActive ? (
+                                <Wifi className="h-3 w-3 text-green-500" />
+                            ) : (
+                                <WifiOff className="h-3 w-3 text-gray-400" />
+                            )}
+                        </div>
+                    </span>
+                </button>
+
+                {/* Connection Status Indicator */}
+                {isActive && !isConnecting && (
+                    <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full bg-green-400 ring-2 ring-white"></div>
+                )}
+            </div>
+
+            {/* Mobile Status Icon */}
+            <div className="lg:hidden">
+                <span className="text-xs">{isConnecting ? '⏳' : isActive ? '🟢' : '🔴'}</span>
+            </div>
+        </div>
+    );
+}
 
 interface SensorData {
     moisture: number;
@@ -159,6 +243,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
     const [selectedPlant, setSelectedPlant] = useState<string>('sawah');
     const [isLoading, setIsLoading] = useState(false);
+    const [iotSystemActive, setIotSystemActive] = useState(false);
 
     // Animation states
     const [cardHovered, setCardHovered] = useState<string | null>(null);
@@ -173,6 +258,25 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         return () => clearInterval(interval);
     }, []);
+
+    const handleIoTToggle = (isActive: boolean) => {
+        setIotSystemActive(isActive);
+        console.log('🔌 IoT System SoilSense:', isActive ? 'ACTIVATED ✅' : 'DEACTIVATED ❌');
+
+        // Di sini nanti bisa ditambahkan logic untuk:
+        // - Mengirim API call ke backend untuk mengontrol sensor
+        // - Update status sensor secara real-time
+        // - Menampilkan notifikasi sukses/error
+        // - Mengaktifkan/menonaktifkan monitoring otomatis
+
+        if (isActive) {
+            console.log('🌱 Sistem monitoring tanah aktif');
+            console.log('📡 Sensor mulai mengumpulkan data');
+        } else {
+            console.log('⏸️ Sistem monitoring dihentikan');
+            console.log('🔋 Mode hemat daya aktif');
+        }
+    };
 
     const getMoistureStatus = (moisture: number) => {
         if (moisture < 30) return { status: 'Kering', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' };
@@ -211,7 +315,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     style={{ animationDelay: '2000ms' }}
                 ></div>
 
-                {/* Enhanced Header */}
+                {/* Enhanced Header with IoT Toggle */}
                 <header className="sticky top-0 z-50 border-b border-emerald-200/30 bg-white/90 shadow-sm backdrop-blur-xl">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-16 items-center justify-between">
@@ -231,8 +335,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             </div>
 
-                            {/* Enhanced Header Actions */}
+                            {/* Enhanced Header Actions with IoT Toggle */}
                             <div className="flex items-center space-x-4">
+                                {/* IoT System Toggle - NEW FEATURE */}
+                                <IoTToggle initialState={iotSystemActive} onToggle={handleIoTToggle} />
+
                                 {/* Real-time Status - Removed "Live" text */}
                                 <div className="hidden items-center space-x-2 rounded-full bg-green-50 px-3 py-1.5 ring-1 ring-green-200/50 md:flex">
                                     <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>

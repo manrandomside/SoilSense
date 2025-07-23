@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertCircle, Eye, EyeOff, Leaf, Mail, QrCode, Smartphone, Users } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Leaf, Mail, QrCode, Users } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface LoginProps {
@@ -158,19 +158,6 @@ export default function BarcodeLogin({ errors = {} }: LoginProps) {
                                         Beli SoilSense sekarang
                                     </Link>
                                 </p>
-                            </div>
-
-                            {/* Demo Info */}
-                            <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                                <div className="flex items-start gap-3">
-                                    <Smartphone className="mt-0.5 h-5 w-5 text-blue-600" />
-                                    <div>
-                                        <h4 className="font-medium text-blue-900">Demo Mode</h4>
-                                        <p className="mt-1 text-sm text-blue-700">
-                                            Gunakan barcode: <span className="font-mono font-bold">123456789012</span> untuk testing
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
 
                             {/* Info Box - BARU */}
