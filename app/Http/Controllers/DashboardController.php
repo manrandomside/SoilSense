@@ -13,24 +13,28 @@ class DashboardController extends Controller
 {
     public function index(Request $request = null)
     {
-        // Get user from request or auth - FIXED: Handle optional request parameter
+        // FIXED: Prioritas check user login terlebih dahulu
         $user = $request ? $request->user() : Auth::user();
         
-        // Check if in development mode (no user authentication)
-        $isDevelopment = !$user || app()->environment('local', 'testing');
+        // Jika ada user yang login, gunakan data production (real user)
+        if ($user) {
+            // Production mode - check profile completion
+            if (!$user->profile_completed) {
+                return redirect()->route('profile.setup');
+            }
+            
+            // Production mode - use real user data
+            return $this->getProductionData($user);
+        }
         
+        // Hanya jika BENAR-BENAR tidak ada user login DAN dalam development mode
+        $isDevelopment = app()->environment('local', 'testing');
         if ($isDevelopment) {
-            // Development mode - use dummy data
             return $this->getDevelopmentData();
         }
         
-        // Production mode - check profile completion
-        if (!$user->profile_completed) {
-            return redirect()->route('profile.setup');
-        }
-        
-        // Production mode - use real user data
-        return $this->getProductionData($user);
+        // Jika tidak ada user dan bukan development, redirect ke login
+        return redirect()->route('login');
     }
     
     /**
@@ -158,11 +162,11 @@ class DashboardController extends Controller
             'lastUpdate' => now()->toISOString()
         ];
 
-        // Enhanced user data
+        // FIXED: Enhanced user data - gunakan data user yang sebenarnya
         $userData = [
-            'name' => $user->name,
-            'avatar' => null,
+            'name' => $user->name, // Ini akan menampilkan "Firman Fadilah" bukan "Development User"
             'email' => $user->email,
+            'avatar' => $user->avatar ?? null,
             'plant_preference' => $user->plant_preference,
             'profile_completed' => $user->profile_completed,
         ];
@@ -192,7 +196,7 @@ class DashboardController extends Controller
         $plantSpecificData = $this->getPlantSpecificData($plantPreference);
 
         return Inertia::render('dashboard', [
-            'user' => $userData,
+            'user' => $userData, // Data user yang sebenarnya (Firman Fadilah)
             'sensorData' => $sensorData,
             'statistics' => $statistics,
             'weatherData' => $weatherData,

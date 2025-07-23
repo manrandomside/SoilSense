@@ -204,19 +204,26 @@ export default function Homepage({ user }: HomepageProps) {
                 <div className="absolute top-40 right-20 h-32 w-32 animate-pulse rounded-full bg-emerald-200/20 blur-2xl delay-1000"></div>
                 <div className="absolute bottom-20 left-1/4 h-24 w-24 animate-pulse rounded-full bg-cyan-200/25 blur-xl delay-2000"></div>
 
-                {/* Header */}
+                {/* Header - UPDATED CONSISTENT NAVBAR */}
                 <header className="sticky top-0 z-40 border-b border-emerald-200/30 bg-white/90 shadow-sm backdrop-blur-xl">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-16 items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                                    <Leaf className="h-6 w-6 text-white" />
+                            {/* Consistent Logo - Same as Dashboard */}
+                            <div className="flex items-center space-x-3">
+                                <div className="relative">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg ring-2 ring-green-200">
+                                        <Leaf className="h-6 w-6 text-white" />
+                                    </div>
                                 </div>
-                                <h1 className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-2xl font-bold text-transparent">
-                                    SoilSense
-                                </h1>
+                                <div>
+                                    <h1 className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-xl font-bold text-transparent">
+                                        SoilSense
+                                    </h1>
+                                    <p className="text-xs text-slate-500">Smart Agriculture System</p>
+                                </div>
                             </div>
 
+                            {/* Navigation */}
                             <nav className="flex items-center gap-4">
                                 {user ? (
                                     <div className="flex items-center gap-3">

@@ -275,6 +275,10 @@ Route::get('/settings', function () {
     return redirect('/settings/profile');
 })->name('settings');
 
+// =====================================================
+// PROFILE ROUTES - WITH MANUAL AUTH CHECK
+// =====================================================
+
 // Profile page dengan manual auth check
 Route::get('/profile', function () {
     if (!Auth::check()) {
@@ -289,6 +293,23 @@ Route::get('/profile', function () {
         'user' => Auth::user()
     ]);
 })->name('profile.show');
+
+// ADDED: Profile update route dengan manual auth check
+Route::post('/profile/update', function (Request $request) {
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    
+    if (!Auth::user()->profile_completed) {
+        return redirect()->route('profile.setup');
+    }
+    
+    return app(AuthController::class)->updateProfile($request);
+})->name('profile.update');
+
+// =====================================================
+// OTHER PROTECTED ROUTES
+// =====================================================
 
 // Notifications page dengan manual auth check
 Route::get('/notifications', function () {
@@ -420,6 +441,9 @@ Route::post('/logout', function (Request $request) {
     
     return redirect('/');
 })->name('logout');
+
+// Tambahkan route logout ini ke routes/web.php:
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // =====================================================
 // HELPER FUNCTION UNTUK AUTH CHECK (OPTIONAL)

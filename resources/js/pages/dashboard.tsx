@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     Activity,
     AlertTriangle,
@@ -6,6 +6,7 @@ import {
     Battery,
     Bell,
     CheckCircle,
+    ChevronDown,
     ChevronRight,
     CloudRain,
     Droplets,
@@ -248,14 +249,67 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     <Settings className="h-5 w-5" />
                                 </button>
 
-                                {/* Enhanced User Profile */}
-                                <div className="flex items-center space-x-3 rounded-full bg-gradient-to-r from-white to-slate-50 p-2 pr-4 shadow-sm ring-1 ring-slate-200/50">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
-                                        <User className="h-4 w-4 text-white" />
-                                    </div>
-                                    <div className="hidden sm:block">
-                                        <div className="text-sm font-semibold text-slate-900">{user.name}</div>
-                                        {user.email && <div className="text-xs text-slate-500">{user.email}</div>}
+                                {/* Enhanced User Profile - CLICKABLE WITH LOGOUT DROPDOWN */}
+                                <div className="group relative">
+                                    <button className="flex cursor-pointer items-center space-x-3 rounded-full bg-gradient-to-r from-white to-slate-50 p-2 pr-4 shadow-sm ring-1 ring-slate-200/50 transition-all duration-200 hover:scale-105 hover:shadow-md hover:ring-green-300/50">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all duration-200 group-hover:from-green-600 group-hover:to-emerald-700">
+                                            <User className="h-4 w-4 text-white" />
+                                        </div>
+                                        <div className="hidden sm:block">
+                                            <div className="text-sm font-semibold text-slate-900 transition-colors group-hover:text-green-700">
+                                                {user.name}
+                                            </div>
+                                            {user.email && (
+                                                <div className="text-xs text-slate-500 transition-colors group-hover:text-green-600">
+                                                    {user.email}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <ChevronDown className="h-4 w-4 text-slate-400 transition-colors group-hover:text-green-600" />
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    <div className="ring-opacity-5 invisible absolute top-full right-0 z-50 mt-2 w-48 rounded-xl bg-white opacity-0 shadow-lg ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                        <div className="py-1">
+                                            <Link
+                                                href="/profile"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                            >
+                                                <User className="mr-2 h-4 w-4" />
+                                                Lihat Profile
+                                            </Link>
+                                            <Link
+                                                href="/settings"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                            >
+                                                <Settings className="mr-2 h-4 w-4" />
+                                                Pengaturan
+                                            </Link>
+                                            <Link
+                                                href="/analytics"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                            >
+                                                <BarChart3 className="mr-2 h-4 w-4" />
+                                                Analitik
+                                            </Link>
+                                            <hr className="my-1" />
+                                            <Link
+                                                href="/logout"
+                                                method="post"
+                                                as="button"
+                                                className="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                                            >
+                                                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                                    />
+                                                </svg>
+                                                Logout
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

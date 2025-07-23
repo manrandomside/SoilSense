@@ -100,6 +100,89 @@ class AuthController extends Controller
     }
 
     /**
+     * Update user profile (untuk user yang sudah lengkap profile-nya)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'plant_preference' => 'required|in:sawah,lahan-kering,hidroponik',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $updateData = [
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'plant_preference' => $request->plant_preference,
+        ];
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $avatarName = time() . '_' . $user->id . '.' . $avatar->getClientOriginalExtension();
+            
+            // Pastikan directory exists
+            $avatarPath = public_path('storage/avatars');
+            if (!file_exists($avatarPath)) {
+                mkdir($avatarPath, 0755, true);
+            }
+            
+            // Simpan avatar baru
+            $avatar->move($avatarPath, $avatarName);
+            $updateData['avatar'] = '/storage/avatars/' . $avatarName;
+            
+            // Hapus avatar lama jika ada
+            if ($user->avatar && file_exists(public_path($user->avatar))) {
+                unlink(public_path($user->avatar));
+            }
+        }
+
+        // Update user data
+        $user->update($updateData);
+
+        // Update seasonal settings jika plant preference berubah
+        if ($user->plant_preference !== $request->plant_preference) {
+            $this->updateSeasonalSettings($user, $request->plant_preference);
+        }
+
+        return back()->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    /**
+     * Logout user dan redirect ke homepage
+     */
+    public function logout(Request $request)
+    {
+        // Get user name before logout for personalized message
+        $userName = Auth::user() ? Auth::user()->name : 'Pengguna';
+        
+        // Logout user
+        Auth::logout();
+        
+        // Invalidate session
+        $request->session()->invalidate();
+        
+        // Regenerate CSRF token untuk security
+        $request->session()->regenerateToken();
+        
+        // Redirect ke homepage dengan success message
+        return redirect('/')->with('success', "Terima kasih {$userName}! Anda telah logout dari SoilSense. Sampai jumpa lagi! 🌱");
+    }
+
+    /**
      * Check email availability
      */
     public function checkEmailAvailability(Request $request)
@@ -180,6 +263,72 @@ class AuthController extends Controller
             'monitoring_interval_wet' => 60,
             'power_conservation_enabled' => false,
         ]);
+    }
+
+    /**
+     * Update seasonal settings based on plant preference change
+     */
+    private function updateSeasonalSettings($user, $plantPreference)
+    {
+        $settings = [
+            'sawah' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 40,
+                    'moisture_max' => 70,
+                    'ph_min' => 5.5,
+                    'ph_max' => 7.0,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 60,
+                    'moisture_max' => 90,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.8,
+                ],
+            ],
+            'lahan-kering' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 30,
+                    'moisture_max' => 60,
+                    'ph_min' => 6.0,
+                    'ph_max' => 7.5,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 50,
+                    'moisture_max' => 80,
+                    'ph_min' => 5.8,
+                    'ph_max' => 7.2,
+                ],
+            ],
+            'hidroponik' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 70,
+                    'moisture_max' => 90,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.5,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 70,
+                    'moisture_max' => 95,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.3,
+                ],
+            ],
+        ];
+
+        $plantSettings = $settings[$plantPreference] ?? $settings['lahan-kering'];
+
+        // Update existing seasonal settings
+        $seasonalSetting = \App\Models\SeasonalSetting::where('user_id', $user->id)->first();
+        
+        if ($seasonalSetting) {
+            $seasonalSetting->update([
+                'dry_season_settings' => $plantSettings['dry_season_settings'],
+                'wet_season_settings' => $plantSettings['wet_season_settings'],
+            ]);
+        } else {
+            // Create new if not exists
+            $this->initializeSeasonalSettings($user, $plantPreference);
+        }
     }
 
     /**
