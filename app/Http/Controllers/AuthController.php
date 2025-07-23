@@ -14,7 +14,8 @@ use Inertia\Inertia;
 class AuthController extends Controller
 {
     /**
-     * Login user dengan barcode
+     * Login user dengan barcode (Login Pertama - untuk user baru & existing)
+     * UPDATED: Handle both new and existing users
      */
     public function loginWithBarcode(Request $request)
     {
@@ -22,21 +23,40 @@ class AuthController extends Controller
             'barcode' => 'required|string|size:12'
         ]);
 
-        // Cek apakah barcode valid dan tersedia
-        $barcodeProduct = BarcodeProduct::where('barcode', $request->barcode)
-            ->where('status', 'available')
-            ->first();
+        // Cek apakah barcode valid (bisa available atau used)
+        $barcodeProduct = BarcodeProduct::where('barcode', $request->barcode)->first();
 
         if (!$barcodeProduct) {
             throw ValidationException::withMessages([
-                'barcode' => ['Barcode tidak valid atau sudah digunakan.']
+                'barcode' => ['Barcode tidak valid. Pastikan Anda memasukkan barcode yang benar.']
             ]);
         }
 
         // Cek apakah user sudah ada dengan barcode ini
         $user = User::where('barcode', $request->barcode)->first();
 
-        if (!$user) {
+        if ($user) {
+            // USER SUDAH ADA - login existing user
+            
+            if ($user->profile_completed) {
+                // Jika profile sudah complete, arahkan ke email login
+                return redirect()->route('login.email')->with('message', 
+                    'Akun Anda sudah terdaftar. Silakan login menggunakan email dan password.');
+            } else {
+                // Jika profile belum complete, lanjutkan ke profile setup
+                Auth::login($user);
+                return redirect()->route('profile.setup');
+            }
+            
+        } else {
+            // USER BARU - buat akun baru
+            
+            if ($barcodeProduct->status !== 'available') {
+                throw ValidationException::withMessages([
+                    'barcode' => ['Barcode sudah digunakan oleh pengguna lain. Gunakan barcode yang berbeda.']
+                ]);
+            }
+
             // Buat user baru
             $user = User::create([
                 'name' => 'SoilSense User', // Temporary name
@@ -53,21 +73,49 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'activated_at' => now()
             ]);
-        }
 
-        // Login user
-        Auth::login($user);
-
-        // Redirect based on profile completion status
-        if (!$user->profile_completed) {
+            // Login user
+            Auth::login($user);
             return redirect()->route('profile.setup');
         }
-
-        return redirect()->route('dashboard');
     }
 
     /**
-     * Complete user profile
+     * Login user dengan email dan password (Login Kedua - untuk user yang sudah terdaftar)
+     */
+    public function loginWithEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        // Cek apakah user dengan email tersebut exists dan profile sudah complete
+        $user = User::where('email', $request->email)
+            ->where('profile_completed', true)
+            ->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['Email tidak terdaftar atau profil belum dilengkapi. Silakan login dengan barcode terlebih dahulu.']
+            ]);
+        }
+
+        // Cek password
+        if (!Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['Password yang Anda masukkan salah.']
+            ]);
+        }
+
+        // Login user
+        Auth::login($user, $request->boolean('remember'));
+
+        return redirect()->route('dashboard')->with('success', 'Selamat datang kembali di SoilSense!');
+    }
+
+    /**
+     * Complete user profile (UPDATED - dengan password wajib)
      */
     public function completeProfile(Request $request)
     {
@@ -76,27 +124,54 @@ class AuthController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255|unique:users,email,' . Auth::id(),
             'plant_preference' => 'required|in:sawah,lahan-kering,hidroponik',
+            'password' => 'required|string|min:8|confirmed', // BARU: password wajib
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator);
+            return back()->withErrors($validator)->withInput();
         }
 
         $user = Auth::user();
         
-        // Update user profile
-        $user->update([
+        // Prepare update data dengan password baru
+        $updateData = [
             'name' => $request->name,
             'phone' => $request->phone,
             'email' => $request->email,
             'plant_preference' => $request->plant_preference,
             'profile_completed' => true,
-        ]);
+            'password' => Hash::make($request->password), // PENTING: Set password baru
+        ];
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $avatarName = time() . '_' . $user->id . '.' . $avatar->getClientOriginalExtension();
+            
+            // Pastikan directory exists
+            $avatarPath = public_path('storage/avatars');
+            if (!file_exists($avatarPath)) {
+                mkdir($avatarPath, 0755, true);
+            }
+            
+            // Simpan avatar baru
+            $avatar->move($avatarPath, $avatarName);
+            $updateData['avatar'] = '/storage/avatars/' . $avatarName;
+            
+            // Hapus avatar lama jika ada
+            if ($user->avatar && file_exists(public_path($user->avatar))) {
+                unlink(public_path($user->avatar));
+            }
+        }
+
+        // Update user profile
+        $user->update($updateData);
 
         // Initialize seasonal settings based on plant preference
         $this->initializeSeasonalSettings($user, $request->plant_preference);
 
-        return redirect()->route('dashboard')->with('success', 'Profil berhasil dilengkapi! Selamat datang di SoilSense.');
+        return redirect()->route('dashboard')->with('success', 'Profil berhasil dilengkapi! Sekarang Anda dapat login menggunakan email dan password. Selamat datang di SoilSense! 🌱');
     }
 
     /**
@@ -110,16 +185,31 @@ class AuthController extends Controller
             return redirect()->route('login');
         }
 
-        $validator = Validator::make($request->all(), [
+        $validationRules = [
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'plant_preference' => 'required|in:sawah,lahan-kering,hidroponik',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
+
+        // Jika user ingin update password
+        if ($request->filled('password')) {
+            $validationRules['current_password'] = 'required|string';
+            $validationRules['password'] = 'required|string|min:8|confirmed';
+        }
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        // Jika user ingin update password, validasi password lama
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak benar.'])->withInput();
+            }
         }
 
         $updateData = [
@@ -128,6 +218,11 @@ class AuthController extends Controller
             'email' => $request->email,
             'plant_preference' => $request->plant_preference,
         ];
+
+        // Update password jika diisi
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
@@ -158,7 +253,12 @@ class AuthController extends Controller
             $this->updateSeasonalSettings($user, $request->plant_preference);
         }
 
-        return back()->with('success', 'Profil berhasil diperbarui!');
+        $message = 'Profil berhasil diperbarui!';
+        if ($request->filled('password')) {
+            $message .= ' Password Anda juga telah diperbarui.';
+        }
+
+        return back()->with('success', $message);
     }
 
     /**

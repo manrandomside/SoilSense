@@ -124,6 +124,11 @@ if (app()->environment('local', 'testing')) {
     Route::get('/dev-login', function () {
         return Inertia::render('BarcodeLogin');
     })->name('dev.login');
+
+    // BARU: Route development untuk email login - tanpa auth
+    Route::get('/dev-email-login', function () {
+        return Inertia::render('EmailLogin');
+    })->name('dev.email.login');
     
     // Test barcode generation
     Route::get('/dev-generate-barcodes', function () {
@@ -181,13 +186,32 @@ Route::get('/about', function () {
 })->name('about');
 
 // =====================================================
-// BARCODE LOGIN ROUTES (HANDLED BY auth.php)
+// AUTHENTICATION ROUTES (NO MIDDLEWARE USED)
 // =====================================================
+
 // CATATAN: Route /login sudah dihandle di routes/auth.php
 // Route /login DIHAPUS dari sini untuk menghindari conflict
 
 // Process barcode login - POST endpoint
 Route::post('/login-barcode', [AuthController::class, 'loginWithBarcode'])->name('login.barcode');
+
+// BARU: Email Login Routes (untuk user yang sudah pernah login)
+Route::get('/login-email', function () {
+    // Jika sudah login dan profile complete, redirect ke dashboard
+    if (Auth::check() && Auth::user()->profile_completed) {
+        return redirect()->route('dashboard');
+    }
+    
+    // Jika sudah login tapi profile belum complete, redirect ke profile setup
+    if (Auth::check() && !Auth::user()->profile_completed) {
+        return redirect()->route('profile.setup');
+    }
+    
+    return Inertia::render('EmailLogin');
+})->name('login.email');
+
+// BARU: Process email login - POST endpoint
+Route::post('/login-email', [AuthController::class, 'loginWithEmail'])->name('login.email.process');
 
 // API untuk check email availability (public untuk AJAX)
 Route::post('/api/check-email', [AuthController::class, 'checkEmailAvailability']);
@@ -430,19 +454,10 @@ Route::get('/api/iot/seasonal-recommendations', [DashboardController::class, 'ge
     ->name('api.iot.seasonal.recommendations');
 
 // =====================================================
-// LOGOUT ROUTE
+// LOGOUT ROUTE (UPDATED - FIX DUPLICATE)
 // =====================================================
 
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    
-    return redirect('/');
-})->name('logout');
-
-// Tambahkan route logout ini ke routes/web.php:
+// UPDATED: Gunakan AuthController logout method untuk konsistensi
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // =====================================================

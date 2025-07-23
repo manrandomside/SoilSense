@@ -1,9 +1,9 @@
 import { Head, useForm } from '@inertiajs/react';
-import { AlertCircle, CheckCircle, Droplets, Sprout, User, Wheat } from 'lucide-react';
+import { AlertCircle, CheckCircle, Droplets, Eye, EyeOff, Lock, Shield, Sprout, User, Wheat } from 'lucide-react';
 import React, { useState } from 'react';
 
 // ===============================================
-// KOMPONEN PROFILE SETUP
+// KOMPONEN PROFILE SETUP - UPDATED WITH PASSWORD
 // ===============================================
 
 interface ProfileSetupProps {
@@ -12,11 +12,16 @@ interface ProfileSetupProps {
 
 export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
     const [currentStep, setCurrentStep] = useState(1);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+
     const { data, setData, post, processing } = useForm({
         name: '',
         phone: '',
         email: '',
         plant_preference: '', // 'sawah', 'lahan-kering', 'hidroponik'
+        password: '', // BARU
+        password_confirmation: '', // BARU
     });
 
     const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
@@ -81,12 +86,18 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
     };
 
     const nextStep = () => {
-        if (currentStep < 2) setCurrentStep(currentStep + 1);
+        if (currentStep < 3) setCurrentStep(currentStep + 1); // UPDATE: 3 steps sekarang
     };
 
     const prevStep = () => {
         if (currentStep > 1) setCurrentStep(currentStep - 1);
     };
+
+    // BARU: Password validation helpers
+    const passwordRequirements = [
+        { met: data.password.length >= 8, text: 'Minimal 8 karakter' },
+        { met: data.password === data.password_confirmation && data.password.length > 0, text: 'Konfirmasi password sama' },
+    ];
 
     return (
         <>
@@ -113,7 +124,7 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                         <p className="mt-2 text-gray-600">Lengkapi profil Anda untuk mendapatkan rekomendasi yang tepat</p>
                     </div>
 
-                    {/* Progress Indicator */}
+                    {/* Progress Indicator - UPDATED: 3 steps */}
                     <div className="mb-8">
                         <div className="flex items-center justify-center">
                             <div className="flex items-center">
@@ -128,13 +139,37 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                                 >
                                     2
                                 </div>
+                                <div className={`h-1 w-12 ${currentStep >= 3 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                <div
+                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${currentStep >= 3 ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}
+                                >
+                                    3
+                                </div>
                             </div>
                         </div>
-                        <div className="mx-auto mt-2 flex max-w-32 justify-between">
+                        <div className="mx-auto mt-2 flex max-w-48 justify-between">
                             <span className="text-xs text-gray-600">Data Diri</span>
+                            <span className="text-xs text-gray-600">Keamanan</span>
                             <span className="text-xs text-gray-600">Preferensi</span>
                         </div>
                     </div>
+
+                    {/* Global Error Messages */}
+                    {Object.keys(errors).length > 0 && (
+                        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-start space-x-3">
+                                <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+                                <div className="space-y-1">
+                                    <h4 className="text-sm font-medium text-red-900">Perlu diperbaiki:</h4>
+                                    {Object.entries(errors).map(([key, message]) => (
+                                        <p key={key} className="text-sm text-red-600">
+                                            • {message}
+                                        </p>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         {/* Step 1: Data Diri */}
@@ -153,12 +188,6 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                                             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
                                             required
                                         />
-                                        {errors.name && (
-                                            <div className="mt-2 flex items-center gap-2 text-red-600">
-                                                <AlertCircle className="h-4 w-4" />
-                                                <span className="text-sm">{errors.name}</span>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div>
@@ -171,12 +200,6 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                                             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
                                             required
                                         />
-                                        {errors.phone && (
-                                            <div className="mt-2 flex items-center gap-2 text-red-600">
-                                                <AlertCircle className="h-4 w-4" />
-                                                <span className="text-sm">{errors.phone}</span>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div>
@@ -208,12 +231,6 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                                                 <span className="text-sm">Email tersedia</span>
                                             </div>
                                         )}
-                                        {errors.email && (
-                                            <div className="mt-2 flex items-center gap-2 text-red-600">
-                                                <AlertCircle className="h-4 w-4" />
-                                                <span className="text-sm">{errors.email}</span>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
@@ -230,8 +247,118 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                             </div>
                         )}
 
-                        {/* Step 2: Preferensi Tanaman */}
+                        {/* Step 2: Password Setup - BARU */}
                         {currentStep === 2 && (
+                            <div className="rounded-2xl border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
+                                <div className="mb-6 flex items-center space-x-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg">
+                                        <Lock className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900">Keamanan Akun</h2>
+                                        <p className="text-sm text-gray-600">Buat password untuk login selanjutnya</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Password Field */}
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">Password *</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={data.password}
+                                                onChange={(e) => setData('password', e.target.value)}
+                                                placeholder="Minimal 8 karakter"
+                                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+                                                required
+                                                minLength={8}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Password Confirmation Field */}
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">Konfirmasi Password *</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswordConfirmation ? 'text' : 'password'}
+                                                value={data.password_confirmation}
+                                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                                placeholder="Ulangi password"
+                                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                                                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            >
+                                                {showPasswordConfirmation ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Password Requirements */}
+                                    <div className="rounded-lg bg-gray-50 p-4">
+                                        <h4 className="mb-3 text-sm font-medium text-gray-900">Password harus memenuhi:</h4>
+                                        <div className="space-y-2">
+                                            {passwordRequirements.map((req, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`flex items-center space-x-2 ${req.met ? 'text-green-600' : 'text-gray-500'}`}
+                                                >
+                                                    <CheckCircle className="h-4 w-4" />
+                                                    <span className="text-sm">{req.text}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Info Box */}
+                                    <div className="rounded-xl bg-blue-50 p-4">
+                                        <div className="flex items-start space-x-3">
+                                            <Shield className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
+                                            <div className="text-left">
+                                                <h4 className="text-sm font-medium text-blue-900">Penting!</h4>
+                                                <p className="mt-1 text-xs text-blue-700">
+                                                    Setelah profil dilengkapi, Anda dapat login kembali menggunakan email dan password yang telah
+                                                    dibuat.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 flex justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={prevStep}
+                                        className="rounded-xl border border-gray-300 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                    >
+                                        Kembali
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={nextStep}
+                                        disabled={!data.password || data.password.length < 8 || data.password !== data.password_confirmation}
+                                        className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Lanjutkan
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3: Preferensi Tanaman - UPDATED: sekarang step 3 */}
+                        {currentStep === 3 && (
                             <div className="rounded-2xl border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
                                 <h2 className="mb-6 text-xl font-bold text-gray-900">Pilih Jenis Tanaman</h2>
 
@@ -264,13 +391,6 @@ export default function ProfileSetup({ errors = {} }: ProfileSetupProps) {
                                         </div>
                                     ))}
                                 </div>
-
-                                {errors.plant_preference && (
-                                    <div className="mb-6 flex items-center gap-2 text-red-600">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <span className="text-sm">{errors.plant_preference}</span>
-                                    </div>
-                                )}
 
                                 <div className="flex justify-between">
                                     <button
