@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\SeasonalSetting;
 use App\Models\SeasonalAnalytic;
@@ -10,9 +11,10 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request = null)
     {
-        $user = $request->user();
+        // Get user from request or auth - FIXED: Handle optional request parameter
+        $user = $request ? $request->user() : Auth::user();
         
         // Check if in development mode (no user authentication)
         $isDevelopment = !$user || app()->environment('local', 'testing');
@@ -20,6 +22,11 @@ class DashboardController extends Controller
         if ($isDevelopment) {
             // Development mode - use dummy data
             return $this->getDevelopmentData();
+        }
+        
+        // Production mode - check profile completion
+        if (!$user->profile_completed) {
+            return redirect()->route('profile.setup');
         }
         
         // Production mode - use real user data
@@ -100,6 +107,9 @@ class DashboardController extends Controller
             ],
         ];
 
+        // Add demo plant-specific data
+        $plantSpecificData = $this->getPlantSpecificData('lahan-kering'); // Default for development
+
         return Inertia::render('dashboard', [
             'user' => $user,
             'sensorData' => $sensorData,
@@ -107,6 +117,8 @@ class DashboardController extends Controller
             'weatherData' => $weatherData,
             'seasonalSettings' => $seasonalSettings,
             'seasonalAnalytics' => $seasonalAnalytics,
+            'plantSpecificData' => $plantSpecificData,
+            'userPreference' => 'lahan-kering', // Default for development
         ]);
     }
     
@@ -115,24 +127,18 @@ class DashboardController extends Controller
      */
     private function getProductionData($user)
     {
+        // Get plant-specific settings based on user preference
+        $plantPreference = $user->plant_preference ?? 'lahan-kering';
+        $plantSettings = $this->getPlantThresholds($plantPreference);
+
         // Get or create seasonal settings for user
         $seasonalSettings = SeasonalSetting::firstOrCreate(
             ['user_id' => $user->id],
             [
                 'season_mode' => 'auto',
                 'current_season' => $this->detectCurrentSeason(),
-                'dry_season_settings' => [
-                    'moisture_min' => 30,
-                    'moisture_max' => 60,
-                    'ph_min' => 6.0,
-                    'ph_max' => 7.5,
-                ],
-                'wet_season_settings' => [
-                    'moisture_min' => 50,
-                    'moisture_max' => 80,
-                    'ph_min' => 5.8,
-                    'ph_max' => 7.2,
-                ],
+                'dry_season_settings' => $plantSettings['dry_season_settings'],
+                'wet_season_settings' => $plantSettings['wet_season_settings'],
                 'monitoring_interval_dry' => 30,
                 'monitoring_interval_wet' => 60,
                 'power_conservation_enabled' => false,
@@ -157,6 +163,8 @@ class DashboardController extends Controller
             'name' => $user->name,
             'avatar' => null,
             'email' => $user->email,
+            'plant_preference' => $user->plant_preference,
+            'profile_completed' => $user->profile_completed,
         ];
 
         // Statistics with seasonal context
@@ -180,6 +188,9 @@ class DashboardController extends Controller
         // Seasonal analytics comparison
         $seasonalAnalytics = $this->getSeasonalComparison($user->id);
 
+        // Get plant-specific data and recommendations
+        $plantSpecificData = $this->getPlantSpecificData($plantPreference);
+
         return Inertia::render('dashboard', [
             'user' => $userData,
             'sensorData' => $sensorData,
@@ -187,7 +198,136 @@ class DashboardController extends Controller
             'weatherData' => $weatherData,
             'seasonalSettings' => $seasonalSettings,
             'seasonalAnalytics' => $seasonalAnalytics,
+            'plantSpecificData' => $plantSpecificData,
+            'userPreference' => $plantPreference,
         ]);
+    }
+
+    /**
+     * Get plant-specific data and recommendations
+     */
+    private function getPlantSpecificData($plantPreference)
+    {
+        $data = [
+            'sawah' => [
+                'name' => 'Tanaman Sawah',
+                'optimal_moisture' => '60-90%',
+                'optimal_ph' => '5.5-7.0',
+                'key_nutrients' => ['Nitrogen', 'Phosphorus'],
+                'recommendations' => [
+                    'Pastikan sistem irigasi berfungsi optimal',
+                    'Monitor pH tanah secara berkala',
+                    'Perhatikan kadar nitrogen untuk pertumbuhan',
+                    'Kontrol hama wereng dan tikus sawah'
+                ],
+                'season_tips' => [
+                    'dry' => 'Pastikan irigasi optimal untuk sawah, tingkatkan frekuensi monitoring',
+                    'wet' => 'Monitor drainase untuk mencegah genangan berlebih, waspadai penyakit jamur'
+                ],
+                'ideal_conditions' => [
+                    'temperature' => '25-30°C',
+                    'humidity' => '70-85%',
+                    'sunlight' => '6-8 jam/hari'
+                ]
+            ],
+            'lahan-kering' => [
+                'name' => 'Lahan Kering',
+                'optimal_moisture' => '40-70%',
+                'optimal_ph' => '6.0-7.5',
+                'key_nutrients' => ['Potassium', 'Phosphorus'],
+                'recommendations' => [
+                    'Optimalisasi penyiraman saat musim kemarau',
+                    'Perhatikan drainase saat musim hujan',
+                    'Monitor kadar fosfor dan kalium',
+                    'Aplikasi mulsa untuk konservasi air'
+                ],
+                'season_tips' => [
+                    'dry' => 'Tingkatkan frekuensi penyiraman, gunakan mulsa untuk konservasi air',
+                    'wet' => 'Pastikan drainase baik untuk mencegah busuk akar, kurangi penyiraman'
+                ],
+                'ideal_conditions' => [
+                    'temperature' => '22-28°C',
+                    'humidity' => '60-75%',
+                    'sunlight' => '5-7 jam/hari'
+                ]
+            ],
+            'hidroponik' => [
+                'name' => 'Hidroponik',
+                'optimal_moisture' => '70-95%',
+                'optimal_ph' => '5.5-6.5',
+                'key_nutrients' => ['NPK Balance', 'Micronutrients'],
+                'recommendations' => [
+                    'Monitor EC (electrical conductivity) larutan',
+                    'Jaga sirkulasi air dan oksigen',
+                    'Kontrol pH larutan nutrisi secara ketat',
+                    'Bersihkan sistem secara berkala'
+                ],
+                'season_tips' => [
+                    'dry' => 'Monitor EC larutan nutrisi lebih ketat, pastikan cooling system berfungsi',
+                    'wet' => 'Perhatikan sirkulasi udara dan oksigen, waspadai pertumbuhan alga'
+                ],
+                'ideal_conditions' => [
+                    'temperature' => '18-25°C',
+                    'humidity' => '50-70%',
+                    'sunlight' => '12-16 jam/hari (LED)'
+                ]
+            ]
+        ];
+
+        return $data[$plantPreference] ?? $data['lahan-kering'];
+    }
+
+    /**
+     * Get plant-specific threshold settings
+     */
+    private function getPlantThresholds($plantPreference)
+    {
+        $settings = [
+            'sawah' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 40,
+                    'moisture_max' => 70,
+                    'ph_min' => 5.5,
+                    'ph_max' => 7.0,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 60,
+                    'moisture_max' => 90,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.8,
+                ],
+            ],
+            'lahan-kering' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 30,
+                    'moisture_max' => 60,
+                    'ph_min' => 6.0,
+                    'ph_max' => 7.5,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 50,
+                    'moisture_max' => 80,
+                    'ph_min' => 5.8,
+                    'ph_max' => 7.2,
+                ],
+            ],
+            'hidroponik' => [
+                'dry_season_settings' => [
+                    'moisture_min' => 70,
+                    'moisture_max' => 90,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.5,
+                ],
+                'wet_season_settings' => [
+                    'moisture_min' => 70,
+                    'moisture_max' => 95,
+                    'ph_min' => 5.5,
+                    'ph_max' => 6.3,
+                ],
+            ],
+        ];
+
+        return $settings[$plantPreference] ?? $settings['lahan-kering'];
     }
 
     /**
@@ -211,10 +351,18 @@ class DashboardController extends Controller
     private function getSeasonalAlerts($sensorData, $seasonalSettings)
     {
         $alerts = 0;
-        $currentSeason = $seasonalSettings->current_season;
-        $settings = $currentSeason === 'dry' 
-            ? $seasonalSettings->dry_season_settings
-            : $seasonalSettings->wet_season_settings;
+        $currentSeason = $seasonalSettings->current_season ?? 'dry';
+        
+        // Handle both object and array format for seasonal settings
+        if (is_object($seasonalSettings)) {
+            $settings = $currentSeason === 'dry' 
+                ? $seasonalSettings->dry_season_settings
+                : $seasonalSettings->wet_season_settings;
+        } else {
+            $settings = $currentSeason === 'dry' 
+                ? $seasonalSettings['dry_season_settings']
+                : $seasonalSettings['wet_season_settings'];
+        }
 
         // Check moisture alerts
         if ($sensorData['moisture'] < $settings['moisture_min'] || 
@@ -436,6 +584,67 @@ class DashboardController extends Controller
             'irrigation_needed' => false,
             'optimal_ph_adjustment' => 0,
             'next_check_interval' => 30
+        ]);
+    }
+
+    /**
+     * Get plant-specific recommendations based on current conditions
+     */
+    public function getPlantRecommendations(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || !$user->profile_completed) {
+            return response()->json(['error' => 'Authentication and profile completion required'], 401);
+        }
+
+        $plantPreference = $user->plant_preference;
+        $plantData = $this->getPlantSpecificData($plantPreference);
+        $currentSeason = $this->detectCurrentSeason();
+
+        return response()->json([
+            'plant_type' => $plantPreference,
+            'current_season' => $currentSeason,
+            'recommendations' => $plantData['recommendations'],
+            'season_tips' => $plantData['season_tips'][$currentSeason],
+            'optimal_conditions' => $plantData['ideal_conditions']
+        ]);
+    }
+
+    /**
+     * Update user plant preference (if needed to change)
+     */
+    public function updatePlantPreference(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Authentication required'], 401);
+        }
+
+        $request->validate([
+            'plant_preference' => 'required|in:sawah,lahan-kering,hidroponik'
+        ]);
+
+        $user->update([
+            'plant_preference' => $request->plant_preference
+        ]);
+
+        // Update seasonal settings based on new plant preference
+        $plantSettings = $this->getPlantThresholds($request->plant_preference);
+        $seasonalSettings = SeasonalSetting::where('user_id', $user->id)->first();
+        
+        if ($seasonalSettings) {
+            $seasonalSettings->update([
+                'dry_season_settings' => $plantSettings['dry_season_settings'],
+                'wet_season_settings' => $plantSettings['wet_season_settings'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Plant preference updated successfully',
+            'plant_data' => $this->getPlantSpecificData($request->plant_preference)
         ]);
     }
 }
