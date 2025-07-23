@@ -1,20 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    Activity,
-    ArrowRight,
-    BarChart3,
-    Bell,
-    Droplets,
-    Leaf,
-    Settings,
-    Smartphone,
-    Sprout,
-    Target,
-    Thermometer,
-    User,
-    Wheat,
-    Wifi,
-} from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, Droplets, Leaf, Smartphone, Sprout, Target, User, Wheat, Wifi } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface HomepageProps {
@@ -87,27 +72,11 @@ export default function Homepage({ user }: HomepageProps) {
             requireAuth: true,
         },
         {
-            id: 'alerts',
-            icon: Bell,
-            title: 'Notifikasi Otomatis',
-            description: 'Peringatan real-time saat kondisi tanah bermasalah',
-            color: 'from-orange-500 to-red-500',
-            requireAuth: true,
-        },
-        {
             id: 'profile',
             icon: User,
             title: 'Profil Pengguna',
             description: 'Kelola data diri dan preferensi tanaman',
             color: 'from-indigo-500 to-blue-500',
-            requireAuth: true,
-        },
-        {
-            id: 'settings',
-            icon: Settings,
-            title: 'Pengaturan',
-            description: 'Kustomisasi threshold dan pengaturan monitoring',
-            color: 'from-gray-500 to-slate-500',
             requireAuth: true,
         },
     ];
@@ -274,40 +243,41 @@ export default function Homepage({ user }: HomepageProps) {
                             )}
                         </div>
 
-                        {/* Demo Sensor Data */}
+                        {/* Demo Sensor Data - MODIFIED SECTION */}
                         <div className="mb-12 rounded-2xl border border-emerald-200 bg-white/80 p-6 shadow-xl backdrop-blur-sm">
                             <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Preview Data Monitoring</h2>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                {/* Card 1: Kelembaban Tanah - Modified */}
                                 <div className="text-center">
                                     <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500">
                                         <Droplets className="h-8 w-8 text-white" />
                                     </div>
-                                    <div className="text-2xl font-bold text-blue-600">{demoSensorData.moisture}%</div>
-                                    <div className="text-sm text-gray-600">Kelembaban Tanah</div>
+                                    <div className="mb-1 text-lg font-bold text-blue-600">Dapat mengukur</div>
+                                    <div className="text-sm text-gray-600">kelembapan tanah dengan akurat</div>
+                                    <div className="mt-1 text-xs text-gray-500">Real-time monitoring</div>
                                 </div>
+
+                                {/* Card 2: pH Tanah - Modified */}
                                 <div className="text-center">
                                     <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500">
                                         <Activity className="h-8 w-8 text-white" />
                                     </div>
-                                    <div className="text-2xl font-bold text-green-600">{demoSensorData.ph}</div>
-                                    <div className="text-sm text-gray-600">pH Tanah</div>
+                                    <div className="mb-1 text-lg font-bold text-green-600">Menganalisis</div>
+                                    <div className="text-sm text-gray-600">tingkat keasaman tanah</div>
+                                    <div className="mt-1 text-xs text-gray-500">pH monitoring</div>
                                 </div>
-                                <div className="text-center">
-                                    <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500">
-                                        <Thermometer className="h-8 w-8 text-white" />
-                                    </div>
-                                    <div className="text-2xl font-bold text-orange-600">{demoSensorData.temperature}°C</div>
-                                    <div className="text-sm text-gray-600">Suhu Tanah</div>
-                                </div>
+
+                                {/* Card 3: NPK - Modified */}
                                 <div className="text-center">
                                     <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500">
                                         <Leaf className="h-8 w-8 text-white" />
                                     </div>
-                                    <div className="text-2xl font-bold text-purple-600">NPK</div>
-                                    <div className="text-sm text-gray-600">
-                                        N:{demoSensorData.npk.nitrogen} P:{demoSensorData.npk.phosphorus} K:{demoSensorData.npk.potassium}
-                                    </div>
+                                    <div className="mb-1 text-lg font-bold text-purple-600">Mengukur nutrisi</div>
+                                    <div className="text-sm text-gray-600">nitrogen, fosfor & kalium</div>
+                                    <div className="mt-1 text-xs text-gray-500">NPK sensor</div>
                                 </div>
+
+                                {/* Card Suhu Tanah telah dihapus */}
                             </div>
                         </div>
 

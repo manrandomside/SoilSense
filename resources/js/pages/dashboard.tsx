@@ -1,7 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import {
     Activity,
-    AlertTriangle,
     BarChart3,
     Battery,
     Bell,
@@ -12,11 +11,9 @@ import {
     Droplets,
     Leaf,
     Lightbulb,
-    Settings,
     Sprout,
     Sun,
     Target,
-    Thermometer,
     TreePine,
     TrendingUp,
     User,
@@ -190,7 +187,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
         <>
             <Head title="SoilSense Dashboard" />
-            <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-cyan-50">
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-cyan-50">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-30">
                     <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -205,10 +202,17 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Floating Decorative Elements */}
                 <div className="absolute top-20 left-10 h-20 w-20 animate-pulse rounded-full bg-green-200/30 blur-xl"></div>
-                <div className="absolute top-40 right-20 h-32 w-32 animate-pulse rounded-full bg-emerald-200/20 blur-2xl delay-1000"></div>
-                <div className="absolute bottom-20 left-1/4 h-24 w-24 animate-pulse rounded-full bg-cyan-200/25 blur-xl delay-2000"></div>
+                <div
+                    className="absolute top-40 right-20 h-32 w-32 animate-pulse rounded-full bg-emerald-200/20 blur-2xl"
+                    style={{ animationDelay: '1000ms' }}
+                ></div>
+                <div
+                    className="absolute bottom-20 left-1/4 h-24 w-24 animate-pulse rounded-full bg-cyan-200/25 blur-xl"
+                    style={{ animationDelay: '2000ms' }}
+                ></div>
+
                 {/* Enhanced Header */}
-                <header className="relative sticky top-0 z-50 border-b border-emerald-200/30 bg-white/90 shadow-sm backdrop-blur-xl">
+                <header className="sticky top-0 z-50 border-b border-emerald-200/30 bg-white/90 shadow-sm backdrop-blur-xl">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-16 items-center justify-between">
                             {/* Logo */}
@@ -235,21 +239,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
 
                                 {/* Notifications */}
-                                <button className="relative rounded-xl p-2 text-slate-600 transition-all duration-200 hover:scale-105 hover:bg-slate-100 hover:text-slate-900">
-                                    <Bell className="h-5 w-5" />
-                                    {statistics.alertsCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 animate-bounce items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                                            {statistics.alertsCount}
-                                        </span>
-                                    )}
-                                </button>
+                                <div className="relative">
+                                    <button className="rounded-xl p-2 text-slate-600 transition-all duration-200 hover:scale-105 hover:bg-slate-100 hover:text-slate-900">
+                                        <Bell className="h-5 w-5" />
+                                        {statistics.alertsCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 flex h-5 w-5 animate-bounce items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                                                {statistics.alertsCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
 
-                                {/* Settings */}
-                                <button className="rounded-xl p-2 text-slate-600 transition-all duration-200 hover:scale-105 hover:rotate-90 hover:bg-slate-100 hover:text-slate-900">
-                                    <Settings className="h-5 w-5" />
-                                </button>
-
-                                {/* Enhanced User Profile - CLICKABLE WITH LOGOUT DROPDOWN */}
+                                {/* Enhanced User Profile - MODIFIED: Removed Settings and Analytics */}
                                 <div className="group relative">
                                     <button className="flex cursor-pointer items-center space-x-3 rounded-full bg-gradient-to-r from-white to-slate-50 p-2 pr-4 shadow-sm ring-1 ring-slate-200/50 transition-all duration-200 hover:scale-105 hover:shadow-md hover:ring-green-300/50">
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all duration-200 group-hover:from-green-600 group-hover:to-emerald-700">
@@ -268,7 +269,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <ChevronDown className="h-4 w-4 text-slate-400 transition-colors group-hover:text-green-600" />
                                     </button>
 
-                                    {/* Dropdown Menu */}
+                                    {/* Dropdown Menu - MODIFIED: Only Profile and Logout */}
                                     <div className="ring-opacity-5 invisible absolute top-full right-0 z-50 mt-2 w-48 rounded-xl bg-white opacity-0 shadow-lg ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:opacity-100">
                                         <div className="py-1">
                                             <Link
@@ -277,20 +278,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             >
                                                 <User className="mr-2 h-4 w-4" />
                                                 Lihat Profile
-                                            </Link>
-                                            <Link
-                                                href="/settings"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                            >
-                                                <Settings className="mr-2 h-4 w-4" />
-                                                Pengaturan
-                                            </Link>
-                                            <Link
-                                                href="/analytics"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                            >
-                                                <BarChart3 className="mr-2 h-4 w-4" />
-                                                Analitik
                                             </Link>
                                             <hr className="my-1" />
                                             <Link
@@ -318,8 +305,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </header>
 
                 {/* Enhanced Main Content */}
-                <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    {/* Enhanced Welcome Section */}
+                <main className="z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                    {/* Enhanced Welcome Section - MODIFIED: Removed Weather Info and Seasonal Indicator */}
                     <div className="mb-8 rounded-3xl bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 p-8 text-white shadow-2xl ring-1 ring-green-200/20">
                         <div className="flex items-center justify-between">
                             <div>
@@ -347,42 +334,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             </div>
 
-                            {/* Enhanced Weather Info */}
-                            <div className="rounded-2xl bg-white/20 p-4 backdrop-blur-sm">
-                                <div className="flex items-center space-x-3">
-                                    <div className="text-right">
-                                        <div className="text-sm font-medium">Cuaca Hari Ini</div>
-                                        <div className="text-lg font-bold">{weatherData.condition}</div>
-                                        <div className="text-sm opacity-90">{weatherData.temperature}°C</div>
-                                    </div>
-                                    <Sun className="h-10 w-10 text-yellow-200" />
-                                </div>
-                                <div className="mt-3 flex items-center justify-between text-xs">
-                                    <span>Kelembapan: {weatherData.humidity}%</span>
-                                    <span>Angin: {weatherData.windSpeed} km/h</span>
-                                </div>
+                            {/* Simple Decorative Element */}
+                            <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                                <div className="text-2xl">🌱</div>
                             </div>
                         </div>
-
-                        {/* Seasonal Mode Indicator */}
-                        {seasonalSettings?.current_season && (
-                            <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-                                <div
-                                    className={`h-2 w-2 rounded-full ${seasonalSettings.current_season === 'dry' ? 'bg-orange-300' : 'bg-blue-300'} animate-pulse`}
-                                ></div>
-                                <span className="text-sm font-medium">
-                                    🌞 Musim {seasonalSettings.current_season === 'dry' ? 'Kemarau' : 'Hujan'} - Auto-Detect
-                                </span>
-                                <div className="ml-2 flex gap-1">
-                                    <button className="rounded-md bg-white/20 px-2 py-1 text-xs transition-colors hover:bg-white/30">
-                                        📊 Analytics
-                                    </button>
-                                    <button className="rounded-md bg-white/20 px-2 py-1 text-xs transition-colors hover:bg-white/30">
-                                        ⚙️ Settings
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Enhanced Main Moisture Display */}
@@ -453,8 +409,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
 
-                    {/* Enhanced Sensor Cards */}
-                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+                    {/* Enhanced Sensor Cards - MODIFIED: Removed Temperature Card */}
+                    <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
                         {/* Moisture Card */}
                         <div
                             className={`group cursor-pointer rounded-2xl border-2 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
@@ -510,108 +466,133 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <ChevronRight className="h-4 w-4 text-green-400 opacity-0 transition-opacity group-hover:opacity-100" />
                             </div>
                         </div>
+                    </div>
 
-                        {/* Temperature Card */}
-                        <div
-                            className={`group cursor-pointer rounded-2xl border-2 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                                cardHovered === 'temperature' ? 'scale-105 border-orange-300' : 'border-orange-200'
-                            }`}
-                            onMouseEnter={() => setCardHovered('temperature')}
-                            onMouseLeave={() => setCardHovered(null)}
-                        >
-                            <div className="mb-4 flex items-center justify-between">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                                    <Thermometer className="h-6 w-6 text-white" />
+                    {/* MODIFIED: Weekly Performance (was Seasonal Performance) */}
+                    <div className="mb-8 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200/50">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h3 className="text-2xl font-bold text-slate-900">Performa Setiap Minggu (1 Bulan)</h3>
+                            <button
+                                onClick={() => setShowDetailedAnalytics(!showDetailedAnalytics)}
+                                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                            >
+                                <BarChart3 className="h-4 w-4" />
+                                Lihat Detail
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            {/* Week 1 */}
+                            <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-6">
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-lg">
+                                        <Sun className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-emerald-700">🌱 Minggu ke-1</h4>
+                                        <p className="text-sm text-emerald-600">Data performa minggu pertama</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-orange-600">
-                                    <TrendingUp className="h-4 w-4" />
-                                    <span className="text-sm font-medium">Normal</span>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-emerald-600">Kelembapan Rata-rata</span>
+                                        <span className="font-bold text-emerald-700">45.2%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-emerald-600">Efisiensi Solar</span>
+                                        <span className="font-bold text-emerald-700">85%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-emerald-600">Frekuensi Irigasi</span>
+                                        <span className="font-bold text-emerald-700">2.3x/hari</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="mb-2 text-4xl font-bold text-orange-700">{sensorData.temperature}°C</div>
-                            <p className="text-lg font-semibold text-orange-600">Suhu Tanah</p>
-                            <div className="mt-4 flex items-center justify-between">
-                                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-200">
-                                    Hangat
-                                </span>
-                                <ChevronRight className="h-4 w-4 text-orange-400 opacity-0 transition-opacity group-hover:opacity-100" />
+
+                            {/* Week 2 */}
+                            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6">
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
+                                        <CloudRain className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-blue-700">🌿 Minggu ke-2</h4>
+                                        <p className="text-sm text-blue-600">Data performa minggu kedua</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-blue-600">Kelembapan Rata-rata</span>
+                                        <span className="font-bold text-blue-700">68.7%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-blue-600">Efisiensi Solar</span>
+                                        <span className="font-bold text-blue-700">65%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-blue-600">Frekuensi Irigasi</span>
+                                        <span className="font-bold text-blue-700">0.8x/hari</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Week 3 */}
+                        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-6">
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
+                                        <Sprout className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-purple-700">🌸 Minggu ke-3</h4>
+                                        <p className="text-sm text-purple-600">Data performa minggu ketiga</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-purple-600">Kelembapan Rata-rata</span>
+                                        <span className="font-bold text-purple-700">52.3%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-purple-600">Efisiensi Solar</span>
+                                        <span className="font-bold text-purple-700">78%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-purple-600">Frekuensi Irigasi</span>
+                                        <span className="font-bold text-purple-700">1.5x/hari</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Week 4 */}
+                            <div className="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 p-6">
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-500 to-amber-500 shadow-lg">
+                                        <Target className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-yellow-700">🌻 Minggu ke-4</h4>
+                                        <p className="text-sm text-yellow-600">Data performa minggu keempat</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-yellow-600">Kelembapan Rata-rata</span>
+                                        <span className="font-bold text-yellow-700">48.9%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-yellow-600">Efisiensi Solar</span>
+                                        <span className="font-bold text-yellow-700">92%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-yellow-600">Frekuensi Irigasi</span>
+                                        <span className="font-bold text-yellow-700">1.8x/hari</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Enhanced Seasonal Performance */}
-                    {seasonalAnalytics && (
-                        <div className="mb-8 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200/50">
-                            <div className="mb-6 flex items-center justify-between">
-                                <h3 className="text-2xl font-bold text-slate-900">Performa Seasonal</h3>
-                                <button
-                                    onClick={() => setShowDetailedAnalytics(!showDetailedAnalytics)}
-                                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                                >
-                                    <BarChart3 className="h-4 w-4" />
-                                    Lihat Detail
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                {/* Dry Season */}
-                                <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6">
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg">
-                                            <Sun className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-lg font-bold text-orange-700">🌞 Musim Kemarau</h4>
-                                            <p className="text-sm text-orange-600">Data performa kemarau</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between">
-                                            <span className="text-orange-600">Kelembapan Rata-rata</span>
-                                            <span className="font-bold text-orange-700">{seasonalAnalytics.dry_season.avg_moisture}%</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-orange-600">Efisiensi Solar</span>
-                                            <span className="font-bold text-orange-700">{seasonalAnalytics.dry_season.solar_efficiency}%</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-orange-600">Frekuensi Irigasi</span>
-                                            <span className="font-bold text-orange-700">
-                                                {seasonalAnalytics.dry_season.irrigation_frequency}x/hari
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Wet Season */}
-                                <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6">
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
-                                            <CloudRain className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-lg font-bold text-blue-700">🌧️ Musim Hujan</h4>
-                                            <p className="text-sm text-blue-600">Data performa hujan</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between">
-                                            <span className="text-blue-600">Kelembapan Rata-rata</span>
-                                            <span className="font-bold text-blue-700">{seasonalAnalytics.wet_season.avg_moisture}%</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-blue-600">Efisiensi Solar</span>
-                                            <span className="font-bold text-blue-700">{seasonalAnalytics.wet_season.solar_efficiency}%</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-blue-600">Frekuensi Irigasi</span>
-                                            <span className="font-bold text-blue-700">{seasonalAnalytics.wet_season.irrigation_frequency}x/hari</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Enhanced Plant Type Selection */}
                     <div className="mb-8 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200/50">
@@ -650,8 +631,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         </div>
                                         <h4 className="mb-2 text-xl font-bold text-slate-800">{plant.name}</h4>
                                         <p className="mb-3 text-sm text-slate-600">{plant.description}</p>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-slate-500">Optimal: {plant.optimal}</span>
+                                        <div className="flex items-center justify-end">
                                             <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-green-600 shadow-sm">
                                                 POPULER ⭐
                                             </span>
@@ -694,8 +674,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 <p className="text-xs text-slate-600">{plant.description}</p>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-xs font-medium text-slate-500">{plant.optimal}</div>
-                                                {isSelected && <CheckCircle className="mt-1 ml-auto h-4 w-4 text-blue-500" />}
+                                                {isSelected && <CheckCircle className="ml-auto h-4 w-4 text-blue-500" />}
                                             </div>
                                         </button>
                                     );
@@ -789,8 +768,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    {/* Quick Actions - MODIFIED: Removed Settings and Alert buttons */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg transition-transform group-hover:scale-110">
                                 <BarChart3 className="h-6 w-6 text-white" />
@@ -802,32 +781,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </button>
 
                         <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg transition-transform group-hover:scale-110">
-                                <Settings className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-slate-800">Pengaturan</div>
-                                <div className="text-xs text-slate-500">Kustomisasi</div>
-                            </div>
-                        </button>
-
-                        <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg transition-transform group-hover:scale-110">
                                 <Lightbulb className="h-6 w-6 text-white" />
                             </div>
                             <div>
                                 <div className="font-bold text-slate-800">Tips & Saran</div>
                                 <div className="text-xs text-slate-500">AI Recommendation</div>
-                            </div>
-                        </button>
-
-                        <button className="group flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-xl">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg transition-transform group-hover:scale-110">
-                                <AlertTriangle className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-slate-800">Peringatan</div>
-                                <div className="text-xs text-slate-500">Status alert</div>
                             </div>
                         </button>
                     </div>
